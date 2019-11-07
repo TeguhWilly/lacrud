@@ -48,13 +48,13 @@ class LacrudController extends Controller
             getClientOriginalExtension();
         $image->move(public_path('images'), $new_name);
         $form_data = array(
-            'frist_name' => $request->first_name,
+            'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'image' => $new_name
         );
 
         Lacrud::create($form_data);
-        return redirect('lacrud')->with('success','data added successfully');
+        return redirect('lacrud')->with('success','Data added successfully');
 
     }
 
@@ -66,7 +66,8 @@ class LacrudController extends Controller
      */
     public function show($id)
     {
-        //
+        $data = Lacrud::findOrFail($id);
+        return view('view', compact('data'));
     }
 
     /**
@@ -77,7 +78,8 @@ class LacrudController extends Controller
      */
     public function edit($id)
     {
-        //
+        $data = Lacrud::findOrFail($id);
+        return view('edit', compact('data'));
     }
 
     /**
@@ -89,7 +91,40 @@ class LacrudController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $image_name = $request->hidden_image;
+        $image = $request->file('image');
+        if($image != '')
+        {
+
+            $request->validate([
+                  'first_name' => 'required',
+                  'last_name' => 'required',
+                  'image' => 'image|max:2048'
+            ]);
+
+
+
+
+            $image_name = rand() . '.' . $image->
+                getClientOriginalExtension();
+            $image->move(public_path('images'), $image_name);
+        }
+        else
+        {
+            $request->validate([
+                'first_name' => 'required',
+                'last_name' => 'required'
+            ]);
+        }
+
+        $form_data = array(
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'image' => $image_name
+        );
+
+        Lacrud::whereId($id)->update($form_data);
+        return redirect('lacrud')->with('success', 'Data is successfully updated');
     }
 
     /**
@@ -100,6 +135,15 @@ class LacrudController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $data = Lacrud::findOrFail($id);
+
+        $image_name = $data->image;
+        if (file_exists(public_path('images/'.$image_name))) {
+            unlink(public_path('images/'.$image_name));
+        }
+
+        $data->delete();
+
+        return redirect('lacrud')->with('success','Data is successfully deleted');
     }
 }
